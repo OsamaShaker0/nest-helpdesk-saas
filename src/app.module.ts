@@ -6,14 +6,16 @@ import appConfig from './config/app.config.js';
 import databaseConfig from './config/database.config.js';
 import joiValidations from './config/joi.validations.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
-let ENV = process.env.NODE_ENV;
+import { CacheRedisModule } from './cache/cache.module.js';
+import redisConfig from './config/redis.config.js';
+const ENV = process.env.NODE_ENV;
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV}`,
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig, redisConfig],
       validationSchema: joiValidations,
     }),
     TypeOrmModule.forRootAsync({
@@ -30,6 +32,7 @@ let ENV = process.env.NODE_ENV;
         synchronize: false,
       }),
     }),
+    CacheRedisModule,
   ],
 
   controllers: [AppController],
