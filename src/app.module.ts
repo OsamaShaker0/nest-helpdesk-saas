@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -8,6 +8,9 @@ import joiValidations from './config/joi.validations.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheRedisModule } from './cache/cache.module.js';
 import redisConfig from './config/redis.config.js';
+import { APP_FILTER } from '@nestjs/core';
+import { GlobalHttpExceptionsFilter } from './common/filters/http-exception.filter.js';
+import { RequestLoggerMiddleware } from './common/middlewares/request-logger.middleware.js';
 const ENV = process.env.NODE_ENV;
 
 @Module({
@@ -36,6 +39,14 @@ const ENV = process.env.NODE_ENV;
   ],
 
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: GlobalHttpExceptionsFilter },
+    Logger,
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggerMiddleware).forRoutes('{*path}');
+  }
+}
