@@ -15,4 +15,9 @@ export default Joi.object({
   REDIS_PORT: Joi.number().required(),
   REDIS_URL: Joi.string().required(),
   CORS_ORIGIN: Joi.string().required(),
+  JWT_SECRET: Joi.string().required(),
+  JWT_ISSUER: Joi.string().required(),
+  JWT_AUDIENCE: Joi.string().required(),
+  JWT_TTL: Joi.number().required(),
+  REFRESH_TOKEN_TTL:Joi.number().required(),
 });

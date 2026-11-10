@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
@@ -19,6 +19,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
   const config = new DocumentBuilder()
     .setTitle('Support Hub API')
     .setDescription('Multi-Tenant SaaS Help Desk System API')

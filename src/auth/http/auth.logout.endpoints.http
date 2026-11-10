@@ -1,0 +1,8 @@
+
+
+POST http://localhost:3000/api/v1/auth/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRhZmY5MzIwLWM1ZTgtNGY0OC04NTZlLTVlZGFiYTdmM2VmZCIsImlhdCI6MTc5NDMxMzk3OCwiZXhwIjoxNzk0MzEzOTgxLCJhdWQiOiJsb2NhbGhvc3QiLCJpc3MiOiJsb2NhbGhvc3QifQ.L2b7gWfstwd_3OM48fAhHXCCLE_gHE925AuTe7bkOV4
+Content-Type:application/json
+{
+    "userId" : "4aff9320-c5e8-4f48-856e-5edaba7f3efd"
+}
