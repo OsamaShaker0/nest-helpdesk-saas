@@ -1,0 +1,12 @@
+
+
+## get all members in tenant 
+GET http://localhost:3000/api/v1/tenants/54bc33f2-6f71-45d5-981c-38b1df62f60e/memberships
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3NGZkNTQyLWFjMGQtNDJhZi1hM2M4LTY4NjM0NDJiNzQ4ZSIsImlhdCI6MTc5NDM5OTc4MywiZXhwIjoxNzk0NDAzMzgzLCJhdWQiOiJsb2NhbGhvc3QiLCJpc3MiOiJsb2NhbGhvc3QifQ.fPYbk5qV2Fxm5TevuaLPs69lYtWuQ_J3wif4KGq9kDU
+
+
+## get one user inside tenant 
+
+
+GET http://localhost:3000/api/v1/tenants/54bc33f2-6f71-45d5-981c-38b1df62f60e/memberships/ee9ac2dc-960f-4a83-a1d1-6de2e28dc4aa
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3NGZkNTQyLWFjMGQtNDJhZi1hM2M4LTY4NjM0NDJiNzQ4ZSIsImlhdCI6MTc5NDM5OTc4MywiZXhwIjoxNzk0NDAzMzgzLCJhdWQiOiJsb2NhbGhvc3QiLCJpc3MiOiJsb2NhbGhvc3QifQ.fPYbk5qV2Fxm5TevuaLPs69lYtWuQ_J3wif4KGq9kDU

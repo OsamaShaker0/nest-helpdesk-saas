@@ -16,7 +16,10 @@ import { AuthModule } from './auth/auth.module.js';
 import jwtConfig from './config/jwt.config.js';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthenticationGuard } from './auth/guards/authentication.guard.js';
+import { MembershipsModule } from './memberships/memberships.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
+import { PaginationModule } from './pagination/pagination.module.js';
+import paginationConfig from './config/pagination.config.js';
 const ENV = process.env.NODE_ENV;
 
 @Module({
@@ -24,7 +27,13 @@ const ENV = process.env.NODE_ENV;
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV}`,
-      load: [appConfig, databaseConfig, redisConfig, jwtConfig],
+      load: [
+        appConfig,
+        databaseConfig,
+        redisConfig,
+        jwtConfig,
+        paginationConfig,
+      ],
       validationSchema: joiValidations,
     }),
     JwtModule.registerAsync({
@@ -60,6 +69,8 @@ const ENV = process.env.NODE_ENV;
     UsersModule,
     AuthModule,
     TenantsModule,
+    MembershipsModule,
+    PaginationModule,
   ],
 
   controllers: [AppController],

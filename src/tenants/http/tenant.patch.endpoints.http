@@ -1,0 +1,18 @@
+## update tenant user role
+
+PATCH http://localhost:3000/api/v1/tenants/5b2c2839-f2c0-4027-aab7-24801fd720d5/memberships/ee9ac2dc-960f-4a83-a1d1-6de2e28dc4aa
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE0Y2U5NmViLTc5OGYtNDJkNC04ODNiLWY5M2ViZTEzMTJjNiIsImlhdCI6MTc5NDQwOTk0MywiZXhwIjoxNzk0NDEzNTQzLCJhdWQiOiJsb2NhbGhvc3QiLCJpc3MiOiJsb2NhbGhvc3QifQ.LmtwN4srrP3kuaiNasuIt0YkK1INoh6lx7UjFfLm100
+Content-Type:application/json
+
+{
+    "role" :"COMPANY_ADMIN"
+}
+
+## update membership status
+PATCH http://localhost:3000/api/v1/tenants/5b2c2839-f2c0-4027-aab7-24801fd720d5/memberships/ee9ac2dc-960f-4a83-a1d1-6de2e28dc4aa/status
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE0Y2U5NmViLTc5OGYtNDJkNC04ODNiLWY5M2ViZTEzMTJjNiIsImlhdCI6MTc5NDQwOTk0MywiZXhwIjoxNzk0NDEzNTQzLCJhdWQiOiJsb2NhbGhvc3QiLCJpc3MiOiJsb2NhbGhvc3QifQ.LmtwN4srrP3kuaiNasuIt0YkK1INoh6lx7UjFfLm100
+Content-Type:application/json
+
+{
+    "status" :"SUSPENDED"
+}

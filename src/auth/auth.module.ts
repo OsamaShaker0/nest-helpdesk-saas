@@ -8,9 +8,14 @@ import { JwtProvider } from './providers/jwt.provider.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from './entities/refresh-token.entity.js';
 import { RefreshTokenProvider } from './providers/refresh-token.provider.js';
+import { MembershipsModule } from '../memberships/memberships.module.js';
 
 @Module({
-  imports: [UsersModule, TypeOrmModule.forFeature([RefreshToken])],
+  imports: [
+    UsersModule,
+    TypeOrmModule.forFeature([RefreshToken]),
+    MembershipsModule,
+  ],
   controllers: [AuthController],
   providers: [
     AuthService,

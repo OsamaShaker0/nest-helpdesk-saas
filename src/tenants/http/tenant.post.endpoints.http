@@ -1,0 +1,19 @@
+
+#### create tenant 
+POST http://localhost:3000/api/v1/tenants
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3NGZkNTQyLWFjMGQtNDJhZi1hM2M4LTY4NjM0NDJiNzQ4ZSIsImlhdCI6MTc5NDM5OTc4MywiZXhwIjoxNzk0NDAzMzgzLCJhdWQiOiJsb2NhbGhvc3QiLCJpc3MiOiJsb2NhbGhvc3QifQ.fPYbk5qV2Fxm5TevuaLPs69lYtWuQ_J3wif4KGq9kDU
+Content-Type : application/json
+
+{
+    "name" : "second company",
+    "slug" : "slug-2"
+}
+
+
+##### add user 
+POST http://localhost:3000/api/v1/tenants/5b2c2839-f2c0-4027-aab7-24801fd720d5/memberships
+Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE0Y2U5NmViLTc5OGYtNDJkNC04ODNiLWY5M2ViZTEzMTJjNiIsImlhdCI6MTc5NDM5ODU5MywiZXhwIjoxNzk0NDAyMTkzLCJhdWQiOiJsb2NhbGhvc3QiLCJpc3MiOiJsb2NhbGhvc3QifQ.oqa-4RXv7vDVhaHOVofUtz5VeqeynGiuTwpGzswjGDU
+Content-Type : application/json
+{
+    "userId" : "674fd542-ac0d-42af-a3c8-6863442b748e"
+}

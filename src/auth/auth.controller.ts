@@ -14,7 +14,7 @@ import { LogInUserDto } from './dtos/login-user.dto.js';
 import { RefreshTtokenDto } from './dtos/refresh-token.dto.js';
 import { LogoutDto } from './dtos/logout.dto.js';
 import { Public } from './decorators/public.decorator.js';
-import type { AuthenticatedRequest } from './interfaces/request.interface.js';
+import type { AuthenticatedRequest } from '../interfaces/request.interface.js';
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
 export class AuthController {
