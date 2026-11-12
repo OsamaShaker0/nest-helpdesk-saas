@@ -6,10 +6,11 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 import { AuthenticatedRequest } from '../../interfaces/request.interface.js';
 import { MembershipsService } from '../../memberships/memberships.service.js';
-import { isUUID } from 'class-validator';
-import { MembershipStatusEnum } from '../../memberships/enums/membership-status.enum.js';
+import { TenantStatus } from '../../tenants/enums/tenant-status.enum.js';
+
 @Injectable()
 export class TenantContextGuard implements CanActivate {
   constructor(private readonly membershipsService: MembershipsService) {}
@@ -21,25 +22,22 @@ export class TenantContextGuard implements CanActivate {
     if (!userId) throw new UnauthorizedException();
 
     const tenantId = request.params.tenantId as string;
-
     if (!tenantId || !isUUID(tenantId)) {
       throw new BadRequestException('A valid tenantId is required');
     }
 
+    // findActiveUserInTenant already filters on membership status = ACTIVE
     const membership = await this.membershipsService.findActiveUserInTenant(
-      tenantId ,
+      tenantId,
       userId,
     );
-    if (
-      !membership ||
-      membership.status !== MembershipStatusEnum.ACTIVE
-    ) {
+    if (!membership || membership.tenant.status !== TenantStatus.ACTIVE) {
       throw new ForbiddenException('No access to this tenant');
     }
 
     request.tenantContext = {
       userId,
-      tenantId ,
+      tenantId,
       membershipId: membership.id,
       role: membership.role,
     };

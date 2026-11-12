@@ -1,7 +1,7 @@
 import { IsEnum, IsNotEmpty } from 'class-validator';
-import { MembershipRoleEnum } from '../../memberships/enums/membership-roles.enum.js';
+import { MembershipRoleEnum } from '../enums/membership-roles.enum.js';
 
-export class UpdateUserRoleDto {
+export class UpdateMembershipRoleDto {
   @IsNotEmpty()
   @IsEnum(MembershipRoleEnum)
   role: MembershipRoleEnum;

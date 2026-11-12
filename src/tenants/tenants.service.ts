@@ -1,33 +1,21 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { CreateTenantDto } from './dtos/create-tenant.dto.js';
 import { Tenant } from './entities/tenants.entity.js';
 import { Membership } from '../memberships/entities/membership.entity.js';
 import { MembershipRoleEnum } from '../memberships/enums/membership-roles.enum.js';
-import { AddMemberProvider } from './providers/add-member.provider.js';
-import { JwtPayload } from '../interfaces/request.interface.js';
-import { AddMemberDto } from './dtos/add-member.dto.js';
-import { ListMembersProvider } from './providers/list-members.provider.js';
-import { GetMemberProvider } from './providers/get-member.provider.js';
-import { UpdateMemberRoleProvider } from './providers/update-member-role.provider.js';
-import { useContainer } from 'class-validator';
-import { UpdateUserRoleDto } from './dtos/update-user-role.dto.js';
-import { UpdateMembershipStatusDto } from '../memberships/dtos/update-membership-status.endpoints.js';
-import { UpdateMembershipStatusProvider } from './providers/update-member-status.provider.js';
+import { MembershipStatusEnum } from '../memberships/enums/membership-status.enum.js';
 
 const PG_UNIQUE_VIOLATION = '23505';
 const SLUG_TAKEN_MESSAGE = 'Slug already in use, please try another one';
 
 @Injectable()
 export class TenantsService {
-  constructor(
-    private readonly dataSource: DataSource,
-    private readonly addMemberProvider: AddMemberProvider,
-    private readonly listMembersProvider: ListMembersProvider,
-    private readonly getMemberProvider: GetMemberProvider,
-    private readonly updateMemberRoleProvider: UpdateMemberRoleProvider,
-    private readonly updateMembershipStatusProvider: UpdateMembershipStatusProvider,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   public async create(userId: string, dto: CreateTenantDto) {
     try {
@@ -56,50 +44,30 @@ export class TenantsService {
     }
   }
 
-  public addMember(
-    tenantId: string,
-    adminPayload: JwtPayload,
-    addMemberDto: AddMemberDto,
-  ) {
-    return this.addMemberProvider.addMember(
-      tenantId,
-      adminPayload,
-      addMemberDto,
-    );
+  public async findMyTenants(userId: string) {
+    const memberships = await this.dataSource.getRepository(Membership).find({
+      where: { userId, status: MembershipStatusEnum.ACTIVE },
+      relations: { tenant: true },
+      order: { createdAt: 'ASC' },
+    });
+    return memberships.map((membership) => ({
+      id: membership.tenant.id,
+      name: membership.tenant.name,
+      slug: membership.tenant.slug,
+      status: membership.tenant.status,
+      membershipId: membership.id,
+      role: membership.role,
+    }));
   }
 
-  public getAllMembers(tenantId: string, user: JwtPayload) {
-    return this.listMembersProvider.getAllMembers(tenantId, user);
-  }
-
-  public getOneMember(user: JwtPayload, tenantId: string, memberId: string) {
-    return this.getMemberProvider.getMemberInTenant(user, tenantId, memberId);
-  }
-  public updateUserRoleInTenant(
-    user: JwtPayload,
-    tenantId: string,
-    membershipId: string,
-    updateRoleDto: UpdateUserRoleDto,
-  ) {
-    return this.updateMemberRoleProvider.updateMemberRole(
-      user,
-      tenantId,
-      membershipId,
-      updateRoleDto,
-    );
-  }
-  public updateMembershipStatus(
-    user: JwtPayload,
-    tenantId: string,
-    membershipId: string,
-    updateMembershipStatusDto: UpdateMembershipStatusDto,
-  ) {
-    return this.updateMembershipStatusProvider.updateMembershipStatus(
-      user,
-      tenantId,
-      membershipId,
-      updateMembershipStatusDto,
-    );
+  public async findOne(tenantId: string) {
+    const tenant = await this.dataSource
+      .getRepository(Tenant)
+      .findOneBy({ id: tenantId });
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+    return tenant;
   }
 
   private async assertSlugAvailable(

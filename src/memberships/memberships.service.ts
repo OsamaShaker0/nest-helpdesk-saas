@@ -1,23 +1,22 @@
 import {
-  BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Membership } from './entities/membership.entity.js';
-import { GetAdminInTenant } from './dtos/get-admin-in-tenant.dto.js';
-import { AddUserToTenantDto } from './dtos/add-user-to-tenant.dto.js';
 import { MembershipRoleEnum } from './enums/membership-roles.enum.js';
 import { MembershipStatusEnum } from './enums/membership-status.enum.js';
 import { PaginationProvider } from '../pagination/pagination.provider.js';
-import { JwtPayload } from '../interfaces/request.interface.js';
-import { UpdateUserRoleDto } from '../tenants/dtos/update-user-role.dto.js';
-import { UpdateMembershipStatusDto } from './dtos/update-membership-status.endpoints.js';
+import { UsersService } from '../users/users.service.js';
 
 const PG_UNIQUE_VIOLATION = '23505';
+
+interface MembershipChange {
+  role?: MembershipRoleEnum;
+  status?: MembershipStatusEnum;
+}
 
 @Injectable()
 export class MembershipsService {
@@ -25,57 +24,45 @@ export class MembershipsService {
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
     private readonly paginationProvider: PaginationProvider,
+    private readonly usersService: UsersService,
   ) {}
-
-  public findActiveAdminInTenant({
-    adminId,
-    tenantId,
-  }: GetAdminInTenant): Promise<Membership | null> {
-    return this.findOneInTenant(tenantId, adminId, {
-      role: MembershipRoleEnum.COMPANY_ADMIN,
-      status: MembershipStatusEnum.ACTIVE,
-    });
-  }
-
-  public findInactiveAdminInTenant({
-    adminId,
-    tenantId,
-  }: GetAdminInTenant): Promise<Membership | null> {
-    return this.findOneInTenant(tenantId, adminId, {
-      role: MembershipRoleEnum.COMPANY_ADMIN,
-      status: Not(MembershipStatusEnum.ACTIVE),
-    });
-  }
 
   public findActiveUserInTenant(
     tenantId: string,
     userId: string,
   ): Promise<Membership | null> {
-    return this.findOneInTenant(tenantId, userId, {
-      status: MembershipStatusEnum.ACTIVE,
+    return this.membershipRepository.findOne({
+      where: { tenantId, userId, status: MembershipStatusEnum.ACTIVE },
+      relations: { tenant: true },
     });
   }
 
-  public findInactiveUserInTenant(
+  public findAllInTenant(tenantId: string) {
+    return this.paginationProvider.paginateResponse(Membership, { tenantId });
+  }
+
+  public async findOneInTenant(
+    tenantId: string,
+    membershipId: string,
+  ): Promise<Membership> {
+    const membership = await this.membershipRepository.findOne({
+      where: { id: membershipId, tenantId },
+    });
+    if (!membership) {
+      throw new NotFoundException('Membership not found in this tenant');
+    }
+    return membership;
+  }
+
+  public async addMember(
     tenantId: string,
     userId: string,
-  ): Promise<Membership | null> {
-    return this.findOneInTenant(tenantId, userId, {
-      status: Not(MembershipStatusEnum.ACTIVE),
-    });
-  }
+  ): Promise<Membership> {
+    const user = await this.usersService.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-  public findAllMembersInTenant(tenantId: string) {
-    return this.paginationProvider.paginateResponse(Membership, {
-      tenantId,
-      status: MembershipStatusEnum.ACTIVE,
-    });
-  }
-
-  public async addUserToTenant({
-    userId,
-    tenantId,
-  }: AddUserToTenantDto): Promise<Membership> {
     try {
       return await this.membershipRepository.save(
         this.membershipRepository.create({
@@ -92,71 +79,64 @@ export class MembershipsService {
     }
   }
 
-  public async removeUserFromTenant(
-    tenantId: string,
-    userId: string,
-  ): Promise<void> {
-    const result = await this.membershipRepository.delete({
-      tenantId,
-      userId,
-    });
-
-    if (!result.affected) {
-      throw new NotFoundException('User is not a member of this tenant');
-    }
-  }
-  public async updateUserRoleInTenant(
-    user: JwtPayload,
+  public updateRole(
     tenantId: string,
     membershipId: string,
-    updateRoleDto: UpdateUserRoleDto,
-  ) {
-    let admin = await this.findActiveAdminInTenant({
-      adminId: user.id,
-      tenantId,
-    });
-    if (admin == null) {
-      return new ForbiddenException('You do not have access');
-    }
-    let membership = await this.membershipRepository.findOne({
-      where: { tenantId, id: membershipId },
-    });
-    if (!membership) {
-      throw new BadRequestException('user not found ');
-    }
-    membership.role = updateRoleDto.role;
-    return await this.membershipRepository.save(membership);
-  }
-  public async updateMembershipStatus(
-    user: JwtPayload,
-    tenantId: string,
-    membershipId: string,
-    updateMembershipStatusDto: UpdateMembershipStatusDto,
-  ) {
-    let admin = await this.findActiveAdminInTenant({
-      adminId: user.id,
-      tenantId,
-    });
-    if (admin == null) {
-      return new ForbiddenException('You do not have access');
-    }
-    let membership = await this.membershipRepository.findOne({
-      where: { tenantId, id: membershipId },
-    });
-    if (!membership) {
-      throw new BadRequestException('user not found ');
-    }
-    membership.status = updateMembershipStatusDto.status;
-    return await this.membershipRepository.save(membership);
+    role: MembershipRoleEnum,
+  ): Promise<Membership> {
+    return this.applyChange(tenantId, membershipId, { role });
   }
 
-  private findOneInTenant(
+  public updateStatus(
     tenantId: string,
-    userId: string,
-    extraWhere: FindOptionsWhere<Membership> = {},
-  ): Promise<Membership | null> {
-    return this.membershipRepository.findOne({
-      where: { tenantId, userId, ...extraWhere },
+    membershipId: string,
+    status: MembershipStatusEnum,
+  ): Promise<Membership> {
+    return this.applyChange(tenantId, membershipId, { status });
+  }
+
+  
+  private applyChange(
+    tenantId: string,
+    membershipId: string,
+    change: MembershipChange,
+  ): Promise<Membership> {
+    return this.membershipRepository.manager.transaction(async (manager) => {
+      const activeAdmins = await manager.find(Membership, {
+        where: {
+          tenantId,
+          role: MembershipRoleEnum.COMPANY_ADMIN,
+          status: MembershipStatusEnum.ACTIVE,
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      const membership = await manager.findOne(Membership, {
+        where: { id: membershipId, tenantId },
+      });
+      if (!membership) {
+        throw new NotFoundException('Membership not found in this tenant');
+      }
+
+      const nextRole = change.role ?? membership.role;
+      const nextStatus = change.status ?? membership.status;
+
+      const isActiveAdminNow =
+        membership.role === MembershipRoleEnum.COMPANY_ADMIN &&
+        membership.status === MembershipStatusEnum.ACTIVE;
+      const staysActiveAdmin =
+        nextRole === MembershipRoleEnum.COMPANY_ADMIN &&
+        nextStatus === MembershipStatusEnum.ACTIVE;
+
+      if (isActiveAdminNow && !staysActiveAdmin && activeAdmins.length <= 1) {
+        throw new ConflictException(
+          'A tenant must keep at least one active admin',
+        );
+      }
+
+      membership.role = nextRole;
+      membership.status = nextStatus;
+      return manager.save(membership);
     });
   }
 }

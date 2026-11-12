@@ -4,5 +4,4 @@ export class AddMemberDto {
   @IsUUID()
   @IsNotEmpty()
   userId: string;
-
 }
